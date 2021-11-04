@@ -1,4 +1,20 @@
 <resources>
     <string name="app_name">VkApp</string>
-    <integer name="com_vk_sdk_AppId">7992568</integer>
+    <string name="video_redactor_toolbar_title">Видеоредактор</string>
+    <string name="video_redactor_save">Сохранить</string>
+    <string name="video_redactor_title">Видео для редактирования</string>
+    <string name="video_redactor_subtitle">Выберите или снимите видео, которое хотите отредактировать</string>
+    <string name="video_redactor_button">Выбрать видео</string>
+    <string name="video_redactor_duration">длительность видео</string>
+    <string name="video_redactor_effects">эффекты</string>
+
+    <plurals name="video_redactor_duration_seconds">
+        <item quantity="zero" />
+        <item quantity="one">%1$d секунда</item>
+        <item quantity="two">%1$d секунды</item>
+        <item quantity="few">%1$d секунды</item>
+        <item quantity="many">%1$d секунд</item>
+        <item quantity="other">%1$d секунд</item>
+    </plurals>
+<!--    resources.getQuantityString(pluralsId, quantity, *args)-->
 </resources>
