@@ -6,6 +6,6 @@
 
     <fragment
         android:id="@+id/videoRedactorFragment"
-        android:name="com.belyakov.vkapp.videoredactor.presentation.VideoRedactorFragment"
+        android:name="com.belyakov.vkapp.videoredactor.root.presentation.VideoRedactorFragment"
         android:label="VideoRedactorFragment" />
 </navigation>

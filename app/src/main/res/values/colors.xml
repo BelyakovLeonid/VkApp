@@ -7,6 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="white_20">#33FFFFFF</color>
+    <color name="white_40">#66FFFFFF</color>
+    <color name="white_60">#99FFFFFF</color>
     <color name="transparent">#00000000</color>
 
     <color name="main_text">#E1E3E6</color>
@@ -21,4 +24,6 @@
     <color name="black_40">#66000000</color>
     <color name="black_20">#33000000</color>
     <color name="ripple">@color/black_20</color>
+    <color name="ripple_light">@color/white_40</color>
+    <color name="ripple_ultra_light">@color/white_60</color>
 </resources>
