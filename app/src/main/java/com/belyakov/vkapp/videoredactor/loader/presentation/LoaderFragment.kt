@@ -1,14 +1,17 @@
 package com.belyakov.vkapp.videoredactor.loader.presentation
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.launch
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.belyakov.vkapp.R
 import com.belyakov.vkapp.base.contracts.GetVideoContract
+import com.belyakov.vkapp.base.utils.collectWhileStarted
 import com.belyakov.vkapp.base.utils.registerSystemInsetsListener
 import com.belyakov.vkapp.databinding.FragmentVideoLoaderBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -20,6 +23,14 @@ class LoaderFragment : Fragment(R.layout.fragment_video_loader), View.OnClickLis
 
     private val getVideo = registerForActivityResult(GetVideoContract()) { uri ->
         viewModel.onVideoUriReceived(uri)
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        collectWhileStarted(viewModel.content){ model ->
+            binding.progressBar.isVisible = model.isLoading
+            binding.contentGroup.isVisible = !model.isLoading
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
