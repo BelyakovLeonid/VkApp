@@ -70,4 +70,7 @@ dependencies {
     //VK
     implementation 'com.vk:android-sdk-core:3.4.0'
     implementation 'com.vk:android-sdk-api:3.4.0'
+
+    //ExoPlayer
+    implementation 'com.google.android.exoplayer:exoplayer:2.16.0'
 }

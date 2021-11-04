@@ -1,7 +1,8 @@
 package com.belyakov.vkapp
 
 import android.app.Application
-import com.belyakov.vkapp.videoredactor.welcomeModule
+import com.belyakov.vkapp.base.baseModule
+import com.belyakov.vkapp.videoredactor.videoRedactorModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -17,7 +18,8 @@ class VkApp : Application() {
             androidLogger()
             androidContext(this@VkApp)
             modules(
-                welcomeModule()
+                videoRedactorModule(),
+                baseModule()
             )
         }
     }
