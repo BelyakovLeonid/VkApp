@@ -7,9 +7,10 @@
 
     <com.google.android.exoplayer2.ui.PlayerView
         android:id="@+id/exo_player_view"
+        app:shutter_background_color="@color/vk_dark"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:resize_mode="fill"
+        app:resize_mode="zoom"
         app:use_controller="false" />
 
     <ImageView

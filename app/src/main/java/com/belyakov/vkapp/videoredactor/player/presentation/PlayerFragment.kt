@@ -2,9 +2,9 @@ package com.belyakov.vkapp.videoredactor.player.presentation
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.belyakov.vkapp.R
@@ -16,6 +16,8 @@ import com.belyakov.vkapp.databinding.FragmentVideoPlayerBinding
 import com.belyakov.vkapp.videoredactor.player.presentation.model.PlayerCommand
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -35,6 +37,7 @@ class PlayerFragment : Fragment(R.layout.fragment_video_player), View.OnClickLis
             uri?.let {
                 exoPlayer.setMediaItem(MediaItem.fromUri(it))
                 exoPlayer.prepare()
+                startPostingProgress()
             }
         }
         collectWhileStarted(viewModel.content) { model ->
@@ -44,6 +47,7 @@ class PlayerFragment : Fragment(R.layout.fragment_video_player), View.OnClickLis
             when (command) {
                 is PlayerCommand.Release -> {
                     exoPlayer.release()
+                    exoPlayer.currentPosition
                 }
                 is PlayerCommand.Play -> {
                     exoPlayer.play()
@@ -55,6 +59,18 @@ class PlayerFragment : Fragment(R.layout.fragment_video_player), View.OnClickLis
                     exoPlayer.pause()
                     exoPlayer.seekToDefaultPosition()
                 }
+            }
+        }
+    }
+
+    private var postingProgressJob: Job? = null
+
+    private fun startPostingProgress() {
+        postingProgressJob?.cancel()
+        postingProgressJob = lifecycleScope.launchWhenStarted {
+            while (true) {
+                viewModel.setCurrentPosition(exoPlayer.currentPosition * 1000L)
+                delay(10L)
             }
         }
     }

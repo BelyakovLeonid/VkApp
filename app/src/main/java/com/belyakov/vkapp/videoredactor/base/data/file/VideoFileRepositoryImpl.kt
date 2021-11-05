@@ -1,4 +1,4 @@
-package com.belyakov.vkapp.videoredactor.base.data
+package com.belyakov.vkapp.videoredactor.base.data.file
 
 import android.content.ContentResolver
 import android.net.Uri
@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class VideoRepositoryImpl(
+class VideoFileRepositoryImpl(
     private val cacheDir: File,
     private val contentResolver: ContentResolver
-) : VideoRepository {
+) : VideoFileRepository {
 
     private val currentUriStateFlow = MutableStateFlow<Uri?>(null)
 
