@@ -10,7 +10,6 @@ import com.belyakov.vkapp.videoredactor.base.data.player.model.PlayerCommand
 import com.belyakov.vkapp.videoredactor.player.presentation.model.PlayerContent
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.PlayerView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -56,10 +55,6 @@ class PlayerViewModel(
         if (isVideoPlayingNow) {
             playerRepository.setPlayerCommand(PlayerCommand.Pause())
         }
-    }
-
-    fun onScreenDestroyed() {
-        playerRepository.setPlayerCommand(PlayerCommand.Release())
     }
 
     private fun subscribeToCurrentVideoUri() {
