@@ -8,6 +8,7 @@ import com.belyakov.vkapp.videoredactor.base.data.player.VideoPlayerRepositoryIm
 import com.belyakov.vkapp.videoredactor.loader.presentation.LoaderViewModel
 import com.belyakov.vkapp.videoredactor.player.presentation.PlayerViewModel
 import com.belyakov.vkapp.videoredactor.root.presentation.VideoRedactorViewModel
+import com.google.android.exoplayer2.ExoPlayer
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -20,7 +21,10 @@ internal fun videoRedactorModule() = module {
         )
     }
     single<VideoPlayerRepository> {
-        VideoPlayerRepositoryImpl()
+        VideoPlayerRepositoryImpl(get())
+    }
+    single {
+        ExoPlayer.Builder(get()).build()
     }
 
     viewModel { LoaderViewModel(get()) }

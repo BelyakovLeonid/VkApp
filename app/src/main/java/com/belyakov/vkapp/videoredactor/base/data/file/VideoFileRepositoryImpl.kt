@@ -24,13 +24,18 @@ class VideoFileRepositoryImpl(
         contentResolver.openInputStream(uri)?.use { inputStream ->
             contentResolver.openOutputStream(tempFileUri)?.use { outputStream ->
                 inputStream.copyTo(outputStream)
-                currentUriStateFlow.value = uri
             }
         }
+
+        currentUriStateFlow.value = uri
     }
 
     override fun getCurrentFileUriAsFlow(): Flow<Uri?> {
         return currentUriStateFlow.asStateFlow()
+    }
+
+    override fun clearCurrentUri() {
+        currentUriStateFlow.value = null
     }
 
     companion object {

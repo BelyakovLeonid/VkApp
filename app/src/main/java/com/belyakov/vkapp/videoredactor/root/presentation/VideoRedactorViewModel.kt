@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.belyakov.vkapp.videoredactor.base.data.file.VideoFileRepository
 import com.belyakov.vkapp.videoredactor.base.data.player.VideoPlayerRepository
+import com.belyakov.vkapp.videoredactor.base.data.player.model.PlayerCommand
 import com.belyakov.vkapp.videoredactor.base.data.player.model.PlayerState
 import com.belyakov.vkapp.videoredactor.root.presentation.model.ControlDetailPanel
 import com.belyakov.vkapp.videoredactor.root.presentation.model.VideoredactorContent
@@ -33,18 +34,20 @@ class VideoRedactorViewModel(
         playerRepository.getPlayerStateAsFlow()
             .onEach { state ->
                 val currentDetailPanel = content.value.controlDetailPanel
-                if (currentDetailPanel is ControlDetailPanel.CropPanel) {
-                    when (state) {
-                        is PlayerState.Paused -> {
-                            currentProgress = state.progress
+                when (state) {
+                    is PlayerState.Paused -> {
+                        currentProgress = state.progress
+                        if (currentDetailPanel is ControlDetailPanel.CropPanel) {
                             content.value = content.value.copy(
                                 controlDetailPanel = currentDetailPanel.copy(
                                     progress = currentProgress
                                 )
                             )
                         }
-                        is PlayerState.Playing -> {
-                            currentProgress = state.progress
+                    }
+                    is PlayerState.Playing -> {
+                        currentProgress = state.progress
+                        if (currentDetailPanel is ControlDetailPanel.CropPanel) {
                             content.value = content.value.copy(
                                 controlDetailPanel = currentDetailPanel.copy(
                                     progress = currentProgress
@@ -72,9 +75,9 @@ class VideoRedactorViewModel(
     fun onControlCropClick() {
         val isAlreadyOpened = content.value.controlDetailPanel is ControlDetailPanel.CropPanel
         content.value = content.value.copy(
-            controlDetailPanel = if (isAlreadyOpened){
+            controlDetailPanel = if (isAlreadyOpened) {
                 null
-            } else{
+            } else {
                 ControlDetailPanel.CropPanel(
                     uri = currentUri,
                     progress = currentProgress
@@ -93,5 +96,22 @@ class VideoRedactorViewModel(
 
     fun onControlMusicClick() {
 
+    }
+
+    fun onVideoCloseClick() {
+        fileRepository.clearCurrentUri()
+        navigationCommands.trySend(VideoredactorNavigationCommand.CloseVideo())
+        content.value = content.value.copy(
+            isControlsVisible = false,
+            controlDetailPanel = null
+        )
+    }
+
+    fun onDoneClick() {
+
+    }
+
+    fun onVideoSeek(progress: Long) {
+        playerRepository.setPlayerCommand(PlayerCommand.Seek(progress))
     }
 }

@@ -5,37 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.exoplayer2.ui.PlayerView
+    <com.google.android.exoplayer2.ui.StyledPlayerView
         android:id="@+id/exo_player_view"
         app:shutter_background_color="@color/vk_dark"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:resize_mode="zoom"
         app:use_controller="false" />
-
-    <ImageView
-        android:id="@+id/toolbarClose"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/ripple_light_bg"
-        android:padding="6dp"
-        android:src="@drawable/close_ic"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/toolbarDone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="18dp"
-        android:background="@drawable/ripple_light_bg"
-        android:padding="6dp"
-        android:src="@drawable/done_ic"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/videoControl"

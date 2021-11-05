@@ -19,6 +19,7 @@ class LoaderViewModel(
         viewModelScope.launch {
             content.value = content.value.copy(isLoading = true)
             fileRepository.saveUriAsFile(uri)
+            content.value = content.value.copy(isLoading = false)
         }
     }
 }

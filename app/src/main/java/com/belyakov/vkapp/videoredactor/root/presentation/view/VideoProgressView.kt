@@ -2,9 +2,14 @@ package com.belyakov.vkapp.videoredactor.root.presentation.view
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.AttributeSet
+import android.util.Log
+import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -30,44 +35,9 @@ class VideoProgressView @JvmOverloads constructor(
     var currentProgress = 0.0
     var currentSeekPosition = 0f
 
-    //    var seekListener: SeekListener? = null
+    var seekListener: ((progress: Long) -> Unit)? = null
     private var videoUri: Uri? = null
-
-    private var coroutineContext: CoroutineScope? = null
-
-    private val binding = ViewTimelineBinding.inflate(LayoutInflater.from(context), this)
-
-    init {
-        isFocusable = true
-        isFocusableInTouchMode = true
-    }
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        when (event!!.action) {
-            MotionEvent.ACTION_MOVE -> handleTouchEvent(event)
-        }
-        return true
-    }
-
-    private fun handleTouchEvent(event: MotionEvent) {
-        //        val seekViewWidth = context.resources.getDimensionPixelSize(R.dimen.frames_video_height)
-        //        currentSeekPosition = (Math.round(event.x) - (seekViewWidth / 2)).toFloat()
-        //
-        //        val availableWidth = binding.containerThumbnails.width -
-        //            (layoutParams as LinearLayout.LayoutParams).marginEnd -
-        //            (layoutParams as LinearLayout.LayoutParams).marginStart
-        //        if (currentSeekPosition + seekViewWidth > binding.containerThumbnails.right) {
-        //            currentSeekPosition = (binding.containerThumbnails.right - seekViewWidth).toFloat()
-        //        } else if (currentSeekPosition < binding.containerThumbnails.left) {
-        //            currentSeekPosition = paddingStart.toFloat()
-        //        }
-        //
-        //        currentProgress = (currentSeekPosition.toDouble() / availableWidth.toDouble()) * 100
-        //        binding.containerThumbnails.translationX = currentSeekPosition
-        //        view_seek_bar.seekTo(((currentProgress * view_seek_bar.getDuration()) / 100).toInt())
-        //
-        //        seekListener?.onVideoSeeked(currentProgress)
-    }
+    private var progressPosition: Float = 0F
 
     private val controlWidth = context.dpToPx(CONTROLS_WIDTH_DP)
     private val progressOverHeight = context.dpToPx(PROGRESS_OVER_HEIGHT_DP)
@@ -80,6 +50,21 @@ class VideoProgressView @JvmOverloads constructor(
     private var previewItemHeight: Int = 0
     private var previewItemWidth: Int = 0
     private var previewItemsCount: Int = 0
+    private var videoOffset: Int = 0
+
+    private var coroutineContext: CoroutineScope? = null
+    private val gestureDetector = GestureDetector(context, ProgressGestureDetector())
+    private val binding = ViewTimelineBinding.inflate(LayoutInflater.from(context), this)
+
+    init {
+        isFocusable = true
+        isFocusableInTouchMode = true
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(event)
+        return true
+    }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -87,7 +72,10 @@ class VideoProgressView @JvmOverloads constructor(
         previewItemHeight = h - (2 * progressOverHeight.toInt() + paddingTop + paddingBottom)
         previewItemWidth = currentVideoFrameWidth * previewItemHeight / currentVideoFrameHeight
         previewItemsCount = previewAvailableWidth / previewItemWidth
+        videoOffset = (measuredWidth - previewAvailableWidth) / 2
 
+//        startTrimPosition
+//        endTrimPosition
 
         setProgress(0)
         loadPreviewItems()
@@ -108,9 +96,8 @@ class VideoProgressView @JvmOverloads constructor(
         if (videoUri == null) return
 
         val progressMs = ms ?: 0
-        val startPosition = (measuredWidth - previewAvailableWidth) / 2
         val progress = progressMs.toFloat() / currentVideoDuration
-        val progressPosition = startPosition + previewAvailableWidth * progress
+        progressPosition = videoOffset + previewAvailableWidth * progress
 
         binding.progressIndicator.translationX = progressPosition
     }
@@ -121,6 +108,18 @@ class VideoProgressView @JvmOverloads constructor(
             binding.progressIndicator.isVisible = true
             recalculateSize()
         }
+    }
+
+    private val selectedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.RED
+    }
+
+
+    private var startTrimPosition = 0
+    private var endTrimPosition = 0
+
+    override fun dispatchDraw(canvas: Canvas) {
+        super.dispatchDraw(canvas)
     }
 
     private fun recalculateSize() {
@@ -150,7 +149,6 @@ class VideoProgressView @JvmOverloads constructor(
                 }
             }
 
-
             withContext(Dispatchers.Main) {
                 scaledBitmaps.forEach { scaledBitmap ->
                     val previewView = VideoThumbnailView(context).apply { setImageBitmap(scaledBitmap) }
@@ -159,6 +157,20 @@ class VideoProgressView @JvmOverloads constructor(
             }
 
             metaDataSource.release()
+        }
+    }
+
+    inner class ProgressGestureDetector : GestureDetector.SimpleOnGestureListener() {
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            return if (e.x >= videoOffset && e.x <= (measuredWidth - videoOffset)) {
+                val videoPosition = e.x - videoOffset
+                val videoPositionMs = (videoPosition * currentVideoDuration / previewAvailableWidth).toLong()
+                setProgress(videoPositionMs)
+                seekListener?.invoke(videoPositionMs)
+                true
+            } else {
+                return super.onSingleTapConfirmed(e)
+            }
         }
     }
 
