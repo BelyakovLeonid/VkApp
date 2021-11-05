@@ -3,17 +3,20 @@ package com.belyakov.vkapp.videoredactor.root.presentation.view
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Rect
+import android.graphics.RectF
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import com.belyakov.vkapp.R
 import com.belyakov.vkapp.base.utils.dpToPx
 import com.belyakov.vkapp.base.utils.getBitmapFrameAt
 import com.belyakov.vkapp.base.utils.getDurationMs
@@ -39,8 +42,9 @@ class VideoProgressView @JvmOverloads constructor(
     private var videoUri: Uri? = null
     private var progressPosition: Float = 0F
 
-    private val controlWidth = context.dpToPx(CONTROLS_WIDTH_DP)
     private val progressOverHeight = context.dpToPx(PROGRESS_OVER_HEIGHT_DP)
+    private val trimIconOffsetOuter = context.dpToPx(TRIM_ICON_OFFSET_OUTER_DP)
+    private val trimIconOffsetInner = context.dpToPx(TRIM_ICON_OFFSET_INNER_DP)
 
     private var currentVideoDuration: Long = 0
     private var currentVideoFrameHeight: Int = 0
@@ -68,14 +72,38 @@ class VideoProgressView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        previewAvailableWidth = w - (2 * controlWidth.toInt() + paddingEnd + paddingStart)
+        previewAvailableWidth = w - (2 * trimStrokeHorizontalWidth.toInt() + paddingEnd + paddingStart)
         previewItemHeight = h - (2 * progressOverHeight.toInt() + paddingTop + paddingBottom)
         previewItemWidth = currentVideoFrameWidth * previewItemHeight / currentVideoFrameHeight
         previewItemsCount = previewAvailableWidth / previewItemWidth
         videoOffset = (measuredWidth - previewAvailableWidth) / 2
 
-//        startTrimPosition
-//        endTrimPosition
+        startTrimPosition = videoOffset
+        endTrimPosition = measuredWidth - videoOffset
+        trimRectBig.set(
+            startTrimPosition.toFloat(),
+            progressOverHeight - trimStrokeVerticalWidth,
+            endTrimPosition.toFloat(),
+            measuredHeight.toFloat() - progressOverHeight + trimStrokeVerticalWidth
+        )
+        trimRectSmall.set(
+            startTrimPosition.toFloat() + trimStrokeHorizontalWidth,
+            progressOverHeight,
+            endTrimPosition.toFloat() - trimStrokeHorizontalWidth,
+            measuredHeight.toFloat() - progressOverHeight
+        )
+        trimStartIcRect.set(
+            (startTrimPosition + trimIconOffsetOuter).toInt(),
+            (measuredHeight / 2F - (trimStartIc?.intrinsicHeight ?: 0) / 2F).toInt(),
+            (startTrimPosition + trimStrokeHorizontalWidth - trimIconOffsetInner).toInt(),
+            (measuredHeight / 2F + (trimStartIc?.intrinsicHeight ?: 0) / 2F).toInt()
+        )
+        trimEndIcRect.set(
+            (endTrimPosition - trimStrokeHorizontalWidth + trimIconOffsetInner).toInt(),
+            (measuredHeight / 2F - (trimEndIc?.intrinsicHeight ?: 0) / 2F).toInt(),
+            (endTrimPosition - trimIconOffsetOuter).toInt(),
+            (measuredHeight / 2F + (trimEndIc?.intrinsicHeight ?: 0) / 2F).toInt()
+        )
 
         setProgress(0)
         loadPreviewItems()
@@ -111,15 +139,42 @@ class VideoProgressView @JvmOverloads constructor(
     }
 
     private val selectedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.RED
+        color = context.getColor(R.color.vk_main)
     }
-
 
     private var startTrimPosition = 0
     private var endTrimPosition = 0
 
+    private val cornerRadius = context.dpToPx(CORNERS_RADIUS_DP)
+    private val trimStrokeHorizontalWidth = context.dpToPx(TRIM_WIDTH_HORIZONTAL_DP)
+    private val trimStrokeVerticalWidth = context.dpToPx(TRIM_WIDTH_VERTICAL_DP)
+    private val trimStartIcRect = Rect()
+    private val trimEndIcRect = Rect()
+    private val trimRectBig = RectF()
+    private val trimRectSmall = RectF()
+    private val clipOutPath = Path()
+
+    private val trimStartIc = AppCompatResources.getDrawable(context, R.drawable.crop_back_ic)
+    private val trimEndIc = AppCompatResources.getDrawable(context, R.drawable.crop_forward_ic)
+
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
+        drawTrimmers(canvas)
+    }
+
+    private fun drawTrimmers(canvas: Canvas) {
+        canvas.save()
+        clipOutPath.addRoundRect(trimRectSmall, cornerRadius, cornerRadius, Path.Direction.CW)
+        canvas.clipOutPath(clipOutPath)
+        canvas.drawRoundRect(trimRectBig, cornerRadius, cornerRadius, selectedPaint)
+        clipOutPath.reset()
+        canvas.restore()
+
+        trimStartIc?.bounds = trimStartIcRect
+        trimStartIc?.draw(canvas)
+
+        trimEndIc?.bounds = trimEndIcRect
+        trimEndIc?.draw(canvas)
     }
 
     private fun recalculateSize() {
@@ -175,9 +230,13 @@ class VideoProgressView @JvmOverloads constructor(
     }
 
     companion object {
-        const val CONTROLS_WIDTH_DP = 12
         const val CONTROLS_HEIGHT_DP = 4
         const val PROGRESS_WIDTH_DP = 4
         const val PROGRESS_OVER_HEIGHT_DP = 12
+        const val CORNERS_RADIUS_DP = 10
+        const val TRIM_WIDTH_VERTICAL_DP = 4
+        const val TRIM_ICON_OFFSET_INNER_DP = 3
+        const val TRIM_ICON_OFFSET_OUTER_DP = 2
+        const val TRIM_WIDTH_HORIZONTAL_DP = 12
     }
 }
