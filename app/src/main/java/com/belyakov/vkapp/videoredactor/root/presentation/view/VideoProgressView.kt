@@ -42,6 +42,21 @@ class VideoProgressView @JvmOverloads constructor(
     private var videoUri: Uri? = null
     private var progressPosition: Float = 0F
 
+    private var startTrimPosition = 0
+    private var endTrimPosition = 0
+
+    private val cornerRadius = context.dpToPx(CORNERS_RADIUS_DP)
+    private val trimStrokeHorizontalWidth = context.dpToPx(TRIM_WIDTH_HORIZONTAL_DP)
+    private val trimStrokeVerticalWidth = context.dpToPx(TRIM_WIDTH_VERTICAL_DP)
+    private val trimStartIcRect = Rect()
+    private val trimEndIcRect = Rect()
+    private val trimRectBig = RectF()
+    private val trimRectSmall = RectF()
+    private val clipOutPath = Path()
+
+    private val trimStartIc = AppCompatResources.getDrawable(context, R.drawable.crop_back_ic)
+    private val trimEndIc = AppCompatResources.getDrawable(context, R.drawable.crop_forward_ic)
+
     private val progressOverHeight = context.dpToPx(PROGRESS_OVER_HEIGHT_DP)
     private val trimIconOffsetOuter = context.dpToPx(TRIM_ICON_OFFSET_OUTER_DP)
     private val trimIconOffsetInner = context.dpToPx(TRIM_ICON_OFFSET_INNER_DP)
@@ -141,21 +156,6 @@ class VideoProgressView @JvmOverloads constructor(
     private val selectedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = context.getColor(R.color.vk_main)
     }
-
-    private var startTrimPosition = 0
-    private var endTrimPosition = 0
-
-    private val cornerRadius = context.dpToPx(CORNERS_RADIUS_DP)
-    private val trimStrokeHorizontalWidth = context.dpToPx(TRIM_WIDTH_HORIZONTAL_DP)
-    private val trimStrokeVerticalWidth = context.dpToPx(TRIM_WIDTH_VERTICAL_DP)
-    private val trimStartIcRect = Rect()
-    private val trimEndIcRect = Rect()
-    private val trimRectBig = RectF()
-    private val trimRectSmall = RectF()
-    private val clipOutPath = Path()
-
-    private val trimStartIc = AppCompatResources.getDrawable(context, R.drawable.crop_back_ic)
-    private val trimEndIc = AppCompatResources.getDrawable(context, R.drawable.crop_forward_ic)
 
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
