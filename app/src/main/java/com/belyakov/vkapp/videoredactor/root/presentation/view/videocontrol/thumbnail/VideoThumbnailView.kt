@@ -1,7 +1,6 @@
-package com.belyakov.vkapp.videoredactor.root.presentation.view
+package com.belyakov.vkapp.videoredactor.root.presentation.view.videocontrol.thumbnail
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.widget.LinearLayout
 

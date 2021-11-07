@@ -90,7 +90,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/controlsContainer">
 
-        <com.belyakov.vkapp.videoredactor.root.presentation.view.VideoProgressView
+        <com.belyakov.vkapp.videoredactor.root.presentation.view.videocontrol.VideoProgressView
             android:id="@+id/progressView"
             android:layout_width="0px"
             android:layout_height="@dimen/video_redactor_progress_height"

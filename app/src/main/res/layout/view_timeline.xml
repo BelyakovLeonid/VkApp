@@ -18,14 +18,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:visibility="gone"
-        android:id="@+id/progressIndicator"
-        android:layout_width="4dp"
-        android:layout_height="0px"
-        android:background="@drawable/progress_indicator_bg"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 </merge>

@@ -1,11 +1,8 @@
-package com.belyakov.vkapp.videoredactor.root.presentation.view
+package com.belyakov.vkapp.videoredactor.root.presentation.view.videocontrol
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Rect
 import android.graphics.RectF
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -13,14 +10,15 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
-import com.belyakov.vkapp.R
 import com.belyakov.vkapp.base.utils.dpToPx
 import com.belyakov.vkapp.base.utils.getBitmapFrameAt
 import com.belyakov.vkapp.base.utils.getDurationMs
+import com.belyakov.vkapp.base.utils.getScaledBitmapFrameAt
 import com.belyakov.vkapp.databinding.ViewTimelineBinding
+import com.belyakov.vkapp.videoredactor.root.presentation.view.videocontrol.progress.VideoProgressDelegate
+import com.belyakov.vkapp.videoredactor.root.presentation.view.videocontrol.thumbnail.VideoThumbnailView
+import com.belyakov.vkapp.videoredactor.root.presentation.view.videocontrol.trim.VideoTrimDelegate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,24 +40,7 @@ class VideoProgressView @JvmOverloads constructor(
     private var videoUri: Uri? = null
     private var progressPosition: Float = 0F
 
-    private var startTrimPosition = 0
-    private var endTrimPosition = 0
-
-    private val cornerRadius = context.dpToPx(CORNERS_RADIUS_DP)
-    private val trimStrokeHorizontalWidth = context.dpToPx(TRIM_WIDTH_HORIZONTAL_DP)
-    private val trimStrokeVerticalWidth = context.dpToPx(TRIM_WIDTH_VERTICAL_DP)
-    private val trimStartIcRect = Rect()
-    private val trimEndIcRect = Rect()
-    private val trimRectBig = RectF()
-    private val trimRectSmall = RectF()
-    private val clipOutPath = Path()
-
-    private val trimStartIc = AppCompatResources.getDrawable(context, R.drawable.crop_back_ic)
-    private val trimEndIc = AppCompatResources.getDrawable(context, R.drawable.crop_forward_ic)
-
     private val progressOverHeight = context.dpToPx(PROGRESS_OVER_HEIGHT_DP)
-    private val trimIconOffsetOuter = context.dpToPx(TRIM_ICON_OFFSET_OUTER_DP)
-    private val trimIconOffsetInner = context.dpToPx(TRIM_ICON_OFFSET_INNER_DP)
 
     private var currentVideoDuration: Long = 0
     private var currentVideoFrameHeight: Int = 0
@@ -74,6 +55,24 @@ class VideoProgressView @JvmOverloads constructor(
     private var coroutineContext: CoroutineScope? = null
     private val gestureDetector = GestureDetector(context, ProgressGestureDetector())
     private val binding = ViewTimelineBinding.inflate(LayoutInflater.from(context), this)
+
+    private val progressWidth = context.dpToPx(4)
+    private val progressCornersRadius = context.dpToPx(4)
+    private val trimCornersRadius = context.dpToPx(CORNERS_RADIUS_DP)
+    private val trimStrokeHorizontalWidth = context.dpToPx(TRIM_WIDTH_HORIZONTAL_DP)
+    private val trimStrokeVerticalWidth = context.dpToPx(TRIM_WIDTH_VERTICAL_DP)
+
+    private val trimDelegate = VideoTrimDelegate(
+        context,
+        trimCornersRadius,
+        trimStrokeHorizontalWidth,
+        trimStrokeVerticalWidth
+    )
+    private val progressDelegate = VideoProgressDelegate(
+        context,
+        progressWidth,
+        progressCornersRadius
+    )
 
     init {
         isFocusable = true
@@ -92,34 +91,22 @@ class VideoProgressView @JvmOverloads constructor(
         previewItemWidth = currentVideoFrameWidth * previewItemHeight / currentVideoFrameHeight
         previewItemsCount = previewAvailableWidth / previewItemWidth
         videoOffset = (measuredWidth - previewAvailableWidth) / 2
-
-        startTrimPosition = videoOffset
-        endTrimPosition = measuredWidth - videoOffset
-        trimRectBig.set(
-            startTrimPosition.toFloat(),
-            progressOverHeight - trimStrokeVerticalWidth,
-            endTrimPosition.toFloat(),
-            measuredHeight.toFloat() - progressOverHeight + trimStrokeVerticalWidth
+        trimDelegate.setBounds(
+            RectF(
+                videoOffset - trimStrokeHorizontalWidth,
+                progressOverHeight - trimStrokeVerticalWidth,
+                w - videoOffset + trimStrokeHorizontalWidth,
+                h - progressOverHeight + trimStrokeVerticalWidth
+            )
         )
-        trimRectSmall.set(
-            startTrimPosition.toFloat() + trimStrokeHorizontalWidth,
-            progressOverHeight,
-            endTrimPosition.toFloat() - trimStrokeHorizontalWidth,
-            measuredHeight.toFloat() - progressOverHeight
+        progressDelegate.setBounds(
+            RectF(
+                videoOffset.toFloat(),
+                0F,
+                measuredWidth - videoOffset.toFloat(),
+                h.toFloat()
+            )
         )
-        trimStartIcRect.set(
-            (startTrimPosition + trimIconOffsetOuter).toInt(),
-            (measuredHeight / 2F - (trimStartIc?.intrinsicHeight ?: 0) / 2F).toInt(),
-            (startTrimPosition + trimStrokeHorizontalWidth - trimIconOffsetInner).toInt(),
-            (measuredHeight / 2F + (trimStartIc?.intrinsicHeight ?: 0) / 2F).toInt()
-        )
-        trimEndIcRect.set(
-            (endTrimPosition - trimStrokeHorizontalWidth + trimIconOffsetInner).toInt(),
-            (measuredHeight / 2F - (trimEndIc?.intrinsicHeight ?: 0) / 2F).toInt(),
-            (endTrimPosition - trimIconOffsetOuter).toInt(),
-            (measuredHeight / 2F + (trimEndIc?.intrinsicHeight ?: 0) / 2F).toInt()
-        )
-
         setProgress(0)
         loadPreviewItems()
     }
@@ -142,39 +129,22 @@ class VideoProgressView @JvmOverloads constructor(
         val progress = progressMs.toFloat() / currentVideoDuration
         progressPosition = videoOffset + previewAvailableWidth * progress
 
-        binding.progressIndicator.translationX = progressPosition
+        progressDelegate.setProgressPosition(progressPosition)
+        invalidate()
     }
 
     fun setVideoUri(uri: Uri?) {
         if (uri != null && videoUri != uri) {
             videoUri = uri
-            binding.progressIndicator.isVisible = true
+            progressDelegate.isVisible = true
             recalculateSize()
         }
     }
 
-    private val selectedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = context.getColor(R.color.vk_main)
-    }
-
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
-        drawTrimmers(canvas)
-    }
-
-    private fun drawTrimmers(canvas: Canvas) {
-        canvas.save()
-        clipOutPath.addRoundRect(trimRectSmall, cornerRadius, cornerRadius, Path.Direction.CW)
-        canvas.clipOutPath(clipOutPath)
-        canvas.drawRoundRect(trimRectBig, cornerRadius, cornerRadius, selectedPaint)
-        clipOutPath.reset()
-        canvas.restore()
-
-        trimStartIc?.bounds = trimStartIcRect
-        trimStartIc?.draw(canvas)
-
-        trimEndIc?.bounds = trimEndIcRect
-        trimEndIc?.draw(canvas)
+        trimDelegate.draw(canvas)
+        progressDelegate.draw(canvas)
     }
 
     private fun recalculateSize() {
@@ -198,8 +168,11 @@ class VideoProgressView @JvmOverloads constructor(
                 val interval = currentVideoDuration / previewItemsCount
 
                 for (i in 0 until previewItemsCount) {
-                    val bitmap = metaDataSource.getBitmapFrameAt(i * interval) ?: return@withContext
-                    val scaledBitmap = Bitmap.createScaledBitmap(bitmap, previewItemWidth, previewItemHeight, false)
+                    val scaledBitmap = metaDataSource.getScaledBitmapFrameAt(
+                        i * interval,
+                        previewItemWidth,
+                        previewItemHeight
+                    ) ?: return@withContext
                     scaledBitmaps.add(scaledBitmap)
                 }
             }

@@ -18,7 +18,7 @@ class VideoFileRepositoryImpl(
     private val currentUriStateFlow = MutableStateFlow<Uri?>(null)
 
     override suspend fun saveUriAsFile(uri: Uri): Unit = withContext(Dispatchers.IO) {
-        val tempFile = File(cacheDir, TEMP_FILE_NAME)
+        val tempFile = File(cacheDir, generateFileName())
         val tempFileUri = tempFile.toUri()
 
         contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -27,7 +27,7 @@ class VideoFileRepositoryImpl(
             }
         }
 
-        currentUriStateFlow.value = uri
+        currentUriStateFlow.value = tempFileUri
     }
 
     override fun getCurrentFileUriAsFlow(): Flow<Uri?> {
@@ -36,6 +36,10 @@ class VideoFileRepositoryImpl(
 
     override fun clearCurrentUri() {
         currentUriStateFlow.value = null
+    }
+
+    private fun generateFileName(): String{
+        return "${System.currentTimeMillis()}_$TEMP_FILE_NAME"
     }
 
     companion object {

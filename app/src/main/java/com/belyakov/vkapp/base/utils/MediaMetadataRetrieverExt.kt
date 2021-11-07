@@ -15,3 +15,7 @@ fun MediaMetadataRetriever.getDurationMs(): Long {
 fun MediaMetadataRetriever.getBitmapFrameAt(time: Long): Bitmap? {
     return getFrameAtTime(time, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
 }
+
+fun MediaMetadataRetriever.getScaledBitmapFrameAt(time: Long, width: Int, height: Int): Bitmap? {
+    return getScaledFrameAtTime(time, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, width, height)
+}
